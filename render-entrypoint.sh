@@ -1,32 +1,16 @@
 #!/bin/sh
 set -eu
 
-PROXY_PID=""
-SERVER_PID=""
+PORT_VALUE="${PORT:-10000}"
+APP="/opt/eaglerX-1.8-server-image"
 
-cleanup() {
-    if [ -n "$SERVER_PID" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
-        kill "$SERVER_PID" 2>/dev/null || true
-    fi
-    if [ -n "$PROXY_PID" ] && kill -0 "$PROXY_PID" 2>/dev/null; then
-        kill "$PROXY_PID" 2>/dev/null || true
-    fi
-    wait "$SERVER_PID" 2>/dev/null || true
-    wait "$PROXY_PID" 2>/dev/null || true
-}
-trap cleanup TERM INT EXIT
+echo "[render] configuring Eaglercraft public listener for 0.0.0.0:${PORT_VALUE}"
 
-echo "[render] starting public proxy on 0.0.0.0:${PORT:-10000} -> 127.0.0.1:5200"
-python3 /usr/local/bin/render-proxy.py &
-PROXY_PID=$!
+# The upstream EaglerXServer uses 5200 as its normal public listener.
+# Render only exposes the service's $PORT publicly, so change both the
+# listener address and the startup readiness check to Render's port.
+sed -i "s#0.0.0.0:5200#0.0.0.0:${PORT_VALUE}#" "${APP}/bungee/plugins/EaglercraftXBungee/listeners.yml"
+sed -i "s#127.0.0.1 5200#127.0.0.1 ${PORT_VALUE}#" "/usr/local/bin/eaglerx-start"
 
-sleep 1
-
-echo "[render] starting EaglerXServer on native listener 5200"
-/usr/local/bin/eaglerx-start &
-SERVER_PID=$!
-
-wait "$SERVER_PID"
-STATUS=$?
-
-exit "$STATUS"
+echo "[render] starting EaglerXServer; public listener will be 0.0.0.0:${PORT_VALUE}"
+exec /usr/local/bin/eaglerx-start
