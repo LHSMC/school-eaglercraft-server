@@ -20,17 +20,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout test workspace
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: NT9712/eaglercraft-262-workspace
           ref: main
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
           cache: gradle
+
+      - name: Patch incomplete demo build
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("target_teavm_javascript/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace('import com.resentclient.oss.eaglercraft.build.impl.js\n', '')
+          s = s.replace('\n\tid("com.resentclient.oss.eaglercraft.build") version "0.0.0"', '')
+          p.write_text(s)
+          PY
+          grep -n "plugins" -A6 target_teavm_javascript/build.gradle.kts
 
       - name: Build TeaVM JavaScript client
         run: |
