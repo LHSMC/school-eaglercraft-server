@@ -12,6 +12,12 @@ RUN sed -i "s/ThreadingHTTPServer(('0.0.0.0', PORT)/ThreadingHTTPServer(('127.0.
 RUN sed -i 's/query_port: 25577/query_port: 0/' /opt/eaglerX-1.8-server-image/bungee/config.yml \
  && sed -i 's/host: 127.0.0.1:25577/host: 127.0.0.1:0/' /opt/eaglerX-1.8-server-image/bungee/config.yml
 
+# Forward the otherwise-hidden tmux consoles to PID 1 stdout so Render can
+# show the actual Bungee/Paper startup and error messages.
+RUN sed -i '/BUNGEE_PANE=""/a tmux_log_to_stdout() { tmux pipe-pane -t "$1" -o "cat >> /proc/1/fd/1"; }' /opt/eaglerX-1.8-server-image/script/start_server.sh \
+ && sed -i '/tmux respawn-pane -k -t "${BUNGEE_PANE}"/a tmux_log_to_stdout "${BUNGEE_PANE}"' /opt/eaglerX-1.8-server-image/script/start_server.sh \
+ && sed -i '/SERVER_PANE="/a tmux_log_to_stdout "${SERVER_PANE}"' /opt/eaglerX-1.8-server-image/script/start_server.sh
+
 # Keep the upstream Eagler game listener on its native port. Render's PORT
 # will be set to 5200 in the service environment so its public HTTP/WebSocket
 # traffic is forwarded directly to the same port the image expects.
