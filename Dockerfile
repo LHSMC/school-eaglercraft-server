@@ -12,11 +12,9 @@ RUN sed -i "s/ThreadingHTTPServer(('0.0.0.0', PORT)/ThreadingHTTPServer(('127.0.
 RUN sed -i 's/query_port: 25577/query_port: 0/' /opt/eaglerX-1.8-server-image/bungee/config.yml \
  && sed -i 's/host: 127.0.0.1:25577/host: 127.0.0.1:0/' /opt/eaglerX-1.8-server-image/bungee/config.yml
 
-# Forward the otherwise-hidden tmux consoles to PID 1 stdout so Render can
-# show the actual Bungee/Paper startup and error messages.
-RUN sed -i '/BUNGEE_PANE=""/a tmux_log_to_stdout() { tmux pipe-pane -t "$1" -o "cat >> /proc/1/fd/1"; }' /opt/eaglerX-1.8-server-image/script/start_server.sh \
- && sed -i '/tmux respawn-pane -k -t "${BUNGEE_PANE}"/a tmux_log_to_stdout "${BUNGEE_PANE}"' /opt/eaglerX-1.8-server-image/script/start_server.sh \
- && sed -i '/SERVER_PANE="/a tmux_log_to_stdout "${SERVER_PANE}"' /opt/eaglerX-1.8-server-image/script/start_server.sh
+# Forward Bungee/Paper console output directly into Render stdout without
+# using tmux pipe-pane (which can race the tmux server/socket during startup).
+RUN sed -i 's#exec ./run.sh"#exec ./run.sh 2>\&1 | tee /proc/1/fd/1"#' /opt/eaglerX-1.8-server-image/script/start_server.sh
 
 # The base image's ENTRYPOINT was copied before our edits, so refresh the executable
 # that Docker actually runs with the modified startup script.
