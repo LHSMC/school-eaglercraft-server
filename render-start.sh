@@ -5,20 +5,31 @@ export TMUX_TMPDIR="${TMUX_TMPDIR:-/tmp/eaglerx-tmux}"
 export TMUX_SESSION="${TMUX_SESSION:-mcserver}"
 
 ORIGINAL="/usr/local/bin/eaglerx-start-original"
+PROXY="/usr/local/bin/render-proxy.py"
 MAIN_PID=""
+PROXY_PID=""
 
 cleanup() {
     if [ -n "${MAIN_PID}" ] && kill -0 "${MAIN_PID}" 2>/dev/null; then
         kill "${MAIN_PID}" 2>/dev/null || true
         wait "${MAIN_PID}" 2>/dev/null || true
     fi
+    if [ -n "${PROXY_PID}" ] && kill -0 "${PROXY_PID}" 2>/dev/null; then
+        kill "${PROXY_PID}" 2>/dev/null || true
+        wait "${PROXY_PID}" 2>/dev/null || true
+    fi
     exit 0
 }
 
 trap cleanup TERM INT
 
-echo "[render-debug] starting EaglerXServer with tmux output forwarding"
+echo "[render-debug] starting public Render TCP proxy on ${PORT:-10000}"
+python3 "${PROXY}" &
+PROXY_PID=$!
 
+sleep 1
+
+echo "[render-debug] starting EaglerXServer with tmux output forwarding"
 "${ORIGINAL}" &
 MAIN_PID=$!
 
@@ -42,5 +53,8 @@ STATUS=$?
 
 kill "${MONITOR_PID}" 2>/dev/null || true
 wait "${MONITOR_PID}" 2>/dev/null || true
+
+kill "${PROXY_PID}" 2>/dev/null || true
+wait "${PROXY_PID}" 2>/dev/null || true
 
 exit "${STATUS}"
