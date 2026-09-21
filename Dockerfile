@@ -18,6 +18,11 @@ RUN sed -i '/BUNGEE_PANE=""/a tmux_log_to_stdout() { tmux pipe-pane -t "$1" -o "
  && sed -i '/tmux respawn-pane -k -t "${BUNGEE_PANE}"/a tmux_log_to_stdout "${BUNGEE_PANE}"' /opt/eaglerX-1.8-server-image/script/start_server.sh \
  && sed -i '/SERVER_PANE="/a tmux_log_to_stdout "${SERVER_PANE}"' /opt/eaglerX-1.8-server-image/script/start_server.sh
 
+# The base image's ENTRYPOINT was copied before our edits, so refresh the executable
+# that Docker actually runs with the modified startup script.
+RUN cp /opt/eaglerX-1.8-server-image/script/start_server.sh /usr/local/bin/eaglerx-start \
+ && chmod +x /usr/local/bin/eaglerx-start
+
 # Keep the upstream Eagler game listener on its native port. Render's PORT
 # will be set to 5200 in the service environment so its public HTTP/WebSocket
 # traffic is forwarded directly to the same port the image expects.
