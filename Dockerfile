@@ -21,14 +21,11 @@ RUN sed -i 's#exec ./run.sh"#exec ./run.sh 2>\&1 | tee /proc/1/fd/1"#' /opt/eagl
 RUN cp /opt/eaglerX-1.8-server-image/script/start_server.sh /usr/local/bin/eaglerx-start \
  && chmod +x /usr/local/bin/eaglerx-start
 
-# Keep the upstream Eagler game listener on its native port. Render's PORT
-# will be set to 5200 in the service environment so its public HTTP/WebSocket
-# traffic is forwarded directly to the same port the image expects.
-# Render exposes one public HTTP/WebSocket port. Put the proxy on $PORT and
-# keep EaglercraftXBungee on its native internal port 5200.
-COPY render-proxy.py /usr/local/bin/render-proxy.py
+# Render exposes one public HTTP/WebSocket port. Configure the upstream
+# Eaglercraft listener itself to use Render's $PORT at startup, so there is
+# no extra TCP proxy in front of Bungee.
 COPY render-entrypoint.sh /usr/local/bin/render-entrypoint.sh
-RUN chmod +x /usr/local/bin/render-entrypoint.sh /usr/local/bin/render-proxy.py
+RUN chmod +x /usr/local/bin/render-entrypoint.sh
 
 EXPOSE 10000 5200
 
