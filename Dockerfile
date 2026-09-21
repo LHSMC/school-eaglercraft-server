@@ -12,11 +12,9 @@ RUN sed -i "s/ThreadingHTTPServer(('0.0.0.0', PORT)/ThreadingHTTPServer(('127.0.
 RUN sed -i 's/query_port: 25577/query_port: 0/' /opt/eaglerX-1.8-server-image/bungee/config.yml \
  && sed -i 's/host: 127.0.0.1:25577/host: 127.0.0.1:0/' /opt/eaglerX-1.8-server-image/bungee/config.yml
 
-# Render can forward HTTP/WebSocket traffic directly to the Eagler listener.
-# Put the Eagler game listener on Render's public PORT so there is no extra
-# TCP proxy layer between Render's WebSocket edge and EaglercraftXBungee.
-RUN sed -i 's/address: 0.0.0.0:5200/address: 0.0.0.0:10000/' /opt/eaglerX-1.8-server-image/bungee/plugins/EaglercraftXBungee/listeners.yml
-
-EXPOSE 10000
+# Keep the upstream Eagler game listener on its native port. Render's PORT
+# will be set to 5200 in the service environment so its public HTTP/WebSocket
+# traffic is forwarded directly to the same port the image expects.
+EXPOSE 5200
 
 ENTRYPOINT ["/usr/local/bin/eaglerx-start"]
