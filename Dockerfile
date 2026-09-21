@@ -18,10 +18,12 @@ RUN sed -i 's/address: 0.0.0.0:5200/address: 127.0.0.1:5200/' /opt/eaglerX-1.8-s
 
 EXPOSE 10000
 
-RUN cp /usr/local/bin/eaglerx-start /usr/local/bin/eaglerx-start-original
+RUN cp /usr/local/bin/eaglerx-start /usr/local/bin/eaglerx-start-original \
+ && cp /usr/local/bin/eaglerx-start /usr/local/bin/eaglerx-start-upstream
 
 COPY render-proxy.py /usr/local/bin/render-proxy.py
 COPY render-start.sh /usr/local/bin/render-start.sh
-RUN chmod +x /usr/local/bin/render-start.sh
+COPY render-start.sh /usr/local/bin/eaglerx-start
+RUN chmod +x /usr/local/bin/render-start.sh /usr/local/bin/eaglerx-start
 
 ENTRYPOINT ["/usr/local/bin/render-start.sh"]
