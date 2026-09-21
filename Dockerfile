@@ -12,18 +12,11 @@ RUN sed -i "s/ThreadingHTTPServer(('0.0.0.0', PORT)/ThreadingHTTPServer(('127.0.
 RUN sed -i 's/query_port: 25577/query_port: 0/' /opt/eaglerX-1.8-server-image/bungee/config.yml \
  && sed -i 's/host: 127.0.0.1:25577/host: 127.0.0.1:0/' /opt/eaglerX-1.8-server-image/bungee/config.yml
 
-# The Eagler listener itself stays internal. Render-facing traffic enters
-# through render-proxy.py on $PORT and is forwarded to 127.0.0.1:5200.
-RUN sed -i 's/address: 0.0.0.0:5200/address: 127.0.0.1:5200/' /opt/eaglerX-1.8-server-image/bungee/plugins/EaglercraftXBungee/listeners.yml
+# Render can forward HTTP/WebSocket traffic directly to the Eagler listener.
+# Put the Eagler game listener on Render's public PORT so there is no extra
+# TCP proxy layer between Render's WebSocket edge and EaglercraftXBungee.
+RUN sed -i 's/address: 0.0.0.0:5200/address: 0.0.0.0:10000/' /opt/eaglerX-1.8-server-image/bungee/plugins/EaglercraftXBungee/listeners.yml
 
 EXPOSE 10000
 
-RUN cp /usr/local/bin/eaglerx-start /usr/local/bin/eaglerx-start-original \
- && cp /usr/local/bin/eaglerx-start /usr/local/bin/eaglerx-start-upstream
-
-COPY render-proxy.py /usr/local/bin/render-proxy.py
-COPY render-start.sh /usr/local/bin/render-start.sh
-COPY render-start.sh /usr/local/bin/eaglerx-start
-RUN chmod +x /usr/local/bin/render-start.sh /usr/local/bin/eaglerx-start
-
-ENTRYPOINT ["/usr/local/bin/render-start.sh"]
+ENTRYPOINT ["/usr/local/bin/eaglerx-start"]
