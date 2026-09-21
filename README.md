@@ -13,6 +13,6 @@ This image is based on EaglerXServer, using its Paper 1.8.8 runtime.
 - Environment: `PUBLIC_GAME_URL=https://lhsmc-eaglercraft.onrender.com`
 - Plan: Free
 
-Render exposes only `0.0.0.0:$PORT`. A small TCP proxy forwards that public listener to the internal Eaglercraft WebSocket/HTTP listener on `127.0.0.1:5200`.
+Render exposes only `0.0.0.0:$PORT`. At startup, the container configures EaglercraftXBungee's own HTTP/WebSocket listener to use Render's `$PORT`, so there is no extra TCP proxy.
 
 Do not add gameplay plugins until the basic connection test succeeds.
