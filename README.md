@@ -10,6 +10,7 @@ This image is based on EaglerXServer, using its Paper 1.8.8 runtime.
 - Runtime: Docker
 - Environment: `MINECRAFT_VERSION=1.8`
 - Environment: `PORT=5200`
+- Environment: `PUBLIC_GAME_URL=https://lhsmc-eaglercraft.onrender.com`
 - Plan: Free
 
 Do not add gameplay plugins until the basic connection test succeeds.
